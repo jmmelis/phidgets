@@ -56,9 +56,7 @@ class PhidgetsInterfaceKit:
         self.interfacekit.setOnDetachHandler(self.detach_callback)
 
         # Messages & Services.
-        #self.pubAI       = rospy.Publisher('%s/ai' % self.namespace.rstrip('/'), MsgPhidgetsInterfaceKitAI)
-        #self.pubDI       = rospy.Publisher('%s/di' % self.namespace.rstrip('/'), MsgPhidgetsInterfaceKitDI)
-        self.subCommand  = rospy.Subscriber('%s/command' % self.namespace.rstrip('/'), String, self.command_callback)
+        self.subCommand  = rospy.Subscriber('%s/command' % self.nodename.rstrip('/'), String, self.command_callback)
         
         self.service = rospy.Service('%s/get_ai' % self.namespace.rstrip('/'), SrvPhidgetsInterfaceKitGetAI, self.get_ai_callback)
         self.service = rospy.Service('%s/get_di' % self.namespace.rstrip('/'), SrvPhidgetsInterfaceKitGetDI, self.get_di_callback)
@@ -102,17 +100,14 @@ class PhidgetsInterfaceKit:
                 try:
                     voltages[i] = self.interfacekit.getSensorValue(ch) * self.maxVoltageAI / self.maxADC
                 except Phidgets.PhidgetException, e:
-                    rospy.logwarn('PhidgetException: %s' % e)
+                    rospy.logwarn('%s - PhidgetException: %s' % (self.namespace, e))
                     
                 i += 1
                 
-            # Publish the values.
-            #self.pubAI.publish(voltages)
-            
             rv = SrvPhidgetsInterfaceKitGetAIResponse(voltages)
         else:
             rv = SrvPhidgetsInterfaceKitGetAIResponse()
-            rospy.logwarn('PhidgetsInterfaceKit is not attached.')
+            rospy.logwarn('%s - PhidgetsInterfaceKit is not attached.' % self.namespace)
             
         return rv
     
@@ -129,17 +124,14 @@ class PhidgetsInterfaceKit:
                 try:
                     values[i] = self.interfacekit.getInputState(ch)
                 except Phidgets.PhidgetException, e:
-                    rospy.logwarn('PhidgetException: %s' % e)
+                    rospy.logwarn('%s - PhidgetException: %s' % (self.namespace, e))
 
                 i += 1
                 
-            # Publish the values.
-            #self.pubDI.publish(values)
-            
             rv = SrvPhidgetsInterfaceKitGetDIResponse(values)
         else:
             rv = SrvPhidgetsInterfaceKitGetDIResponse()
-            rospy.logwarn('PhidgetsInterfaceKit is not attached.')
+            rospy.logwarn('%s - PhidgetsInterfaceKit is not attached.' % self.namespace)
             
         return rv
     
@@ -152,12 +144,12 @@ class PhidgetsInterfaceKit:
                     try:
                         self.interfacekit.setOutputState(req.channels[i], req.values[i])
                     except Phidgets.PhidgetException, e:
-                        rospy.logwarn('PhidgetException: %s' % e)
+                        rospy.logwarn('%s - PhidgetException: %s' % (self.namespace, e))
             else:
-                rospy.logwarn('PhidgetsInterfaceKit: You must specify the same number of digital output values as channels.')
+                rospy.logwarn('%s - PhidgetsInterfaceKit: You must specify the same number of digital output values as channels.' % self.namespace)
                 
         else:
-            rospy.logwarn('PhidgetsInterfaceKit is not attached.')
+            rospy.logwarn('%s - PhidgetsInterfaceKit is not attached.' % self.namespace)
             
         return SrvPhidgetsInterfaceKitSetDOResponse()
     
@@ -171,6 +163,15 @@ class PhidgetsInterfaceKit:
 
 
         elif (msg.data == 'help'):
+            rospy.logwarn('')
+            rospy.logwarn('Provides ROS access to the digital and analog i/o of the PhidgetsInterfaceKit.')
+            rospy.logwarn('Three service calls:')
+            rospy.logwarn('  get_ai(channels):         Read the analog input channels, publish the voltages')
+            rospy.logwarn('                            to the ROS topic ''ai'', and return the results.')
+            rospy.logwarn('  get_di(channels):         Read the digital input channels, publish the voltages')
+            rospy.logwarn('                            to the ROS topic ''di'', and return the results.')
+            rospy.logwarn('  set_do(channels,values):  Set the digital output channels to the given values.')
+            rospy.logwarn('')
             rospy.logwarn('The %s/command topic accepts the following string commands:' % self.namespace.rstrip('/'))
             rospy.logwarn('    help     This message.')
             rospy.logwarn('    exit     Exit the program.')
