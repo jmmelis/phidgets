@@ -31,6 +31,7 @@ class PhidgetsInterfaceKit:
         self.bInitialized = False
         self.iCount = 0
         self.bAttached = False
+        self.bWarnedAboutNotAttached = False
         
         # initialize
         self.name = 'phidgets_interfacekit'
@@ -81,11 +82,13 @@ class PhidgetsInterfaceKit:
         rospy.sleep(1) # Wait so that other nodes can display their banner first.
         rospy.logwarn('%s - %s Attached: serial=%s' % (self.namespace, self.phidgetname, self.phidgetserial))
         self.bAttached = True
+        self.bWarnedAboutNotAttached = False
         
 
     def detach_callback(self, phidget):
         rospy.logwarn ('%s - %s Detached: serial=%s' % (self.namespace, self.phidgetname, self.phidgetserial))
         self.bAttached = False
+        self.bWarnedAboutNotAttached = False
 
 
     # get_ai_callback()
@@ -107,7 +110,10 @@ class PhidgetsInterfaceKit:
             rv = SrvPhidgetsInterfaceKitGetAIResponse(voltages)
         else:
             rv = SrvPhidgetsInterfaceKitGetAIResponse()
-            rospy.logwarn('%s - PhidgetsInterfaceKit is not attached.' % self.namespace)
+            if (not self.bWarnedAboutNotAttached):
+                rospy.logwarn('%s - PhidgetsInterfaceKit is not attached.' % self.namespace)
+                self.bWarnedAboutNotAttached = True
+
             
         return rv
     
@@ -131,7 +137,9 @@ class PhidgetsInterfaceKit:
             rv = SrvPhidgetsInterfaceKitGetDIResponse(values)
         else:
             rv = SrvPhidgetsInterfaceKitGetDIResponse()
-            rospy.logwarn('%s - PhidgetsInterfaceKit is not attached.' % self.namespace)
+            if (not self.bWarnedAboutNotAttached):
+                rospy.logwarn('%s - PhidgetsInterfaceKit is not attached.' % self.namespace)
+                self.bWarnedAboutNotAttached = True
             
         return rv
     
@@ -149,7 +157,9 @@ class PhidgetsInterfaceKit:
                 rospy.logwarn('%s - PhidgetsInterfaceKit: You must specify the same number of digital output values as channels.' % self.namespace)
                 
         else:
-            rospy.logwarn('%s - PhidgetsInterfaceKit is not attached.' % self.namespace)
+            if (not self.bWarnedAboutNotAttached):
+                rospy.logwarn('%s - PhidgetsInterfaceKit is not attached.' % self.namespace)
+                self.bWarnedAboutNotAttached = True
             
         return SrvPhidgetsInterfaceKitSetDOResponse()
     
